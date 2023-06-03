@@ -3,11 +3,12 @@ import os
 import json
 import random
 import requests
+import asyncio
 
 from colorthief import ColorThief
 from base64 import b64encode
 from dotenv import load_dotenv, find_dotenv
-from flask import Flask, Response, render_template, request
+from quart import Quart, Response, render_template, request
 
 load_dotenv(find_dotenv())
 
@@ -29,7 +30,7 @@ RECENTLY_PLAYING_URL = (
     "https://api.spotify.com/v1/me/player/recently-played?limit=10"
 )
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 
 def getAuth():
@@ -38,14 +39,14 @@ def getAuth():
     )
 
 
-def refreshToken():
+async def refreshToken():
     data = {
         "grant_type": "refresh_token",
         "refresh_token": SPOTIFY_REFRESH_TOKEN,
     }
 
     headers = {"Authorization": "Basic {}".format(getAuth())}
-    response = requests.post(
+    response = await requests.post(
         REFRESH_TOKEN_URL, data=data, headers=headers).json()
 
     try:
@@ -56,18 +57,18 @@ def refreshToken():
         raise KeyError(str(response))
 
 
-def get(url):
+async def get(url):
     global SPOTIFY_TOKEN
 
     if (SPOTIFY_TOKEN == ""):
         SPOTIFY_TOKEN = refreshToken()
 
-    response = requests.get(
+    response = await requests.get(
         url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"})
 
     if response.status_code == 401:
         SPOTIFY_TOKEN = refreshToken()
-        response = requests.get(
+        response = await requests.get(
             url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"}).json()
         return response
     elif response.status_code == 204:
@@ -95,8 +96,8 @@ def barGen(barCount):
     return barCSS
 
 
-def gradientGen(albumArtURL, color_count):
-    colortheif = ColorThief(BytesIO(requests.get(albumArtURL).content))
+async def gradientGen(albumArtURL, color_count):
+    colortheif = await ColorThief(BytesIO(requests.get(albumArtURL).content))
     palette = colortheif.get_palette(color_count)
     return palette
 
@@ -110,12 +111,12 @@ def getTemplate():
         print(f"Failed to load templates.\r\n```{e}```")
         return FALLBACK_THEME
 
-def loadImageB64(url):
-    response = requests.get(url)
+async def loadImageB64(url):
+    response = await requests.get(url)
     return b64encode(response.content).decode("ascii")
 
 
-def makeSVG(data, background_color, border_color):
+async def makeSVG(data, background_color, border_color):
     barCount = 84
     contentBar = "".join(["<div class='bar'></div>" for _ in range(barCount)])
     barCSS = barGen(barCount)
@@ -159,16 +160,35 @@ def makeSVG(data, background_color, border_color):
         "barPalette": barPalette,
         "songPalette": songPalette
     }
+    
+    await render_template(getTemplate(), **dataDict)
 
-    return render_template(getTemplate(), **dataDict)
+async def check_spotify():
+    global current_song_id
 
+    while True:
+        try:
+            data = await get(NOW_PLAYING_URL)
+        except Exception:
+            data = await get(RECENTLY_PLAYING_URL)
+
+        # Check if the song ID has changed
+        if data["item"]["id"] != current_song_id:
+            current_song_id = data["item"]["id"]
+            print("Song changed:", data["item"]["name"])
+
+        # Make a variable "time" that is set to the amount left in the song
+        time = data["item"]["duration_ms"] - data["progress_ms"]
+        time = time / 1000
+        # Wait for "time" seconds before checking again
+        await asyncio.sleep(time if "is_playing" in data else 1000)
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 @app.route('/with_parameters')
-def catch_all(path):
-    background_color = request.args.get('background_color') or "181414"
-    border_color = request.args.get('border_color') or "181414"
+async def catch_all(path):
+    background_color = await request.args.get('background_color') or "181414"
+    border_color = await request.args.get('border_color') or "181414"
 
     try:
         data = get(NOW_PLAYING_URL)
@@ -184,4 +204,6 @@ def catch_all(path):
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
