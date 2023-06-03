@@ -16,3 +16,4 @@ urllib3==1.25.11
 Werkzeug==2.2.0
 Quart==0.18.1
 colorthief==0.2.1
+uvicorn==0.15.0
