@@ -9,4 +9,4 @@ RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY api/ .
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--workers=1", "--bind", "0.0.0.0:5000", "spotify:app"]
+CMD ["hypercorn", "--workers=2", "--bind", "'0.0.0.0:5000'", "spotify:app"]
