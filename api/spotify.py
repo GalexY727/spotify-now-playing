@@ -67,7 +67,7 @@ async def get(url):
         url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"})
 
     if response.status_code == 401:
-        SPOTIFY_TOKEN = refreshToken()
+        SPOTIFY_TOKEN = await refreshToken()
         response = await requests.get(
             url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"}).json()
         return response
@@ -124,7 +124,7 @@ async def makeSVG(data, background_color, border_color):
     if not "is_playing" in data:
         contentBar = "" #Shows/Hides the EQ bar if no song is currently playing
         currentStatus = "Recently Played Song:"
-        recentPlays = get(RECENTLY_PLAYING_URL)
+        recentPlays = await get(RECENTLY_PLAYING_URL)
         recentPlaysLength = len(recentPlays["items"])
         itemIndex = random.randint(0, recentPlaysLength - 1)
         item = recentPlays["items"][itemIndex]["track"]
@@ -134,12 +134,12 @@ async def makeSVG(data, background_color, border_color):
 
     if item["album"]["images"] == []:
         image = PLACEHOLDER_IMAGE
-        barPalette = gradientGen(PLACEHOLDER_URL, 4)
-        songPalette = gradientGen(PLACEHOLDER_URL, 2)
+        barPalette = await gradientGen(PLACEHOLDER_URL, 4)
+        songPalette = await gradientGen(PLACEHOLDER_URL, 2)
     else:
-        image = loadImageB64(item["album"]["images"][1]["url"])
-        barPalette = gradientGen(item["album"]["images"][1]["url"], 4)
-        songPalette = gradientGen(item["album"]["images"][1]["url"], 2)
+        image = await loadImageB64(item["album"]["images"][1]["url"])
+        barPalette = await gradientGen(item["album"]["images"][1]["url"], 4)
+        songPalette = await gradientGen(item["album"]["images"][1]["url"], 2)
 
     artistName = item["artists"][0]["name"].replace("&", "&amp;")
     songName = item["name"].replace("&", "&amp;")
@@ -191,11 +191,11 @@ async def catch_all(path):
     border_color = request.args.get('border_color') or "181414"
 
     try:
-        data = get(NOW_PLAYING_URL)
+        data = await get(NOW_PLAYING_URL)
     except Exception:
-        data = get(RECENTLY_PLAYING_URL)
+        data = await get(RECENTLY_PLAYING_URL)
 
-    svg = makeSVG(data, background_color, border_color)
+    svg = await makeSVG(data, background_color, border_color)
 
     resp = Response(svg, mimetype="image/svg+xml")
     resp.headers["Cache-Control"] = "s-maxage=1"
@@ -205,5 +205,5 @@ async def catch_all(path):
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.create_task(check_spotify())
+    await loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
