@@ -187,8 +187,8 @@ async def check_spotify():
 @app.route("/<path:path>")
 @app.route('/with_parameters')
 async def catch_all(path):
-    background_color = await request.args.get('background_color') or "181414"
-    border_color = await request.args.get('border_color') or "181414"
+    background_color = request.args.get('background_color') or "181414"
+    border_color = request.args.get('border_color') or "181414"
 
     try:
         data = get(NOW_PLAYING_URL)
