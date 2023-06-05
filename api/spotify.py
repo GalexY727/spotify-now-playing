@@ -4,7 +4,6 @@ import json
 import random
 import requests
 import asyncio
-import vercel
 
 from colorthief import ColorThief
 from base64 import b64encode
