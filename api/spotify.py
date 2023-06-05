@@ -129,7 +129,7 @@ async def makeSVG(data, background_color, border_color):
             recentPlaysLength = len(recentPlays["items"])
             itemIndex = random.randint(0, recentPlaysLength - 1)
             item = recentPlays["items"][itemIndex]["track"]
-        else:
+        #else:   
             # we just need to wait for it... I suppose.
             # since nothing was really made, should we just re-run the program?
             # or should all of this be in an await function extracted from the code?
