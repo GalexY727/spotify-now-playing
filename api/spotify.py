@@ -185,8 +185,9 @@ async def check_spotify():
         # Wait for "time" seconds before checking again
         await asyncio.sleep(time if "is_playing" in data else 1000)
 
-async def catch_all(path):
-    
+async def catch_all():
+    global background_color
+    global border_color
 
     try:
         data = get(NOW_PLAYING_URL)
