@@ -125,9 +125,14 @@ async def makeSVG(data, background_color, border_color):
         contentBar = "" #Shows/Hides the EQ bar if no song is currently playing
         currentStatus = "Recently Played Song:"
         recentPlays = await get(RECENTLY_PLAYING_URL)
-        recentPlaysLength = len(recentPlays["items"])
-        itemIndex = random.randint(0, recentPlaysLength - 1)
-        item = recentPlays["items"][itemIndex]["track"]
+        if recentPlays is not None:
+            recentPlaysLength = len(recentPlays["items"])
+            itemIndex = random.randint(0, recentPlaysLength - 1)
+            item = recentPlays["items"][itemIndex]["track"]
+        else:
+            # we just need to wait for it... I suppose.
+            # since nothing was really made, should we just re-run the program?
+            # or should all of this be in an await function extracted from the code?
     else:
         item = data["item"]
         currentStatus = "Currently Vibing to:"
