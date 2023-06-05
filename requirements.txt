@@ -15,3 +15,4 @@ Werkzeug==2.2.0
 Quart==0.18.1
 colorthief==0.2.1
 hypercorn==0.14.0
+vercel==19.1.0

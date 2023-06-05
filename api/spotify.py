@@ -4,6 +4,7 @@ import json
 import random
 import requests
 import asyncio
+import vercel
 
 from colorthief import ColorThief
 from base64 import b64encode
@@ -125,14 +126,10 @@ async def makeSVG(data, background_color, border_color):
         contentBar = "" #Shows/Hides the EQ bar if no song is currently playing
         currentStatus = "Recently Played Song:"
         recentPlays = await get(RECENTLY_PLAYING_URL)
-        if recentPlays is not None:
-            recentPlaysLength = len(recentPlays["items"])
-            itemIndex = random.randint(0, recentPlaysLength - 1)
-            item = recentPlays["items"][itemIndex]["track"]
-        #else:   
-            # we just need to wait for it... I suppose.
-            # since nothing was really made, should we just re-run the program?
-            # or should all of this be in an await function extracted from the code?
+        vercel.console.log("RecentPlays type: " + type(recentPlays) + "\nRecnetPlays: " + recentPlays + "\n\n")
+        recentPlaysLength = len(recentPlays["items"])
+        itemIndex = random.randint(0, recentPlaysLength - 1)
+        item = recentPlays["items"][itemIndex]["track"]
     else:
         item = data["item"]
         currentStatus = "Currently Vibing to:"
