@@ -63,12 +63,12 @@ async def get(url):
     if (SPOTIFY_TOKEN == ""):
         SPOTIFY_TOKEN = refreshToken()
 
-    response = await requests.get(
+    response = requests.get(
         url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"})
 
     if response.status_code == 401:
         SPOTIFY_TOKEN = await refreshToken()
-        response = await requests.get(
+        response = requests.get(
             url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"}).json()
         return response
     elif response.status_code == 204:
@@ -97,7 +97,7 @@ def barGen(barCount):
 
 
 async def gradientGen(albumArtURL, color_count):
-    colortheif = await ColorThief(BytesIO(requests.get(albumArtURL).content))
+    colortheif = ColorThief(BytesIO(requests.get(albumArtURL).content))
     palette = colortheif.get_palette(color_count)
     return palette
 
@@ -112,7 +112,7 @@ def getTemplate():
         return FALLBACK_THEME
 
 async def loadImageB64(url):
-    response = await requests.get(url)
+    response = requests.get(url)
     return b64encode(response.content).decode("ascii")
 
 
