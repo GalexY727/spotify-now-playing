@@ -21,7 +21,9 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_SECRET_ID = os.getenv("SPOTIFY_SECRET_ID")
 SPOTIFY_REFRESH_TOKEN = os.getenv("SPOTIFY_REFRESH_TOKEN")
 SPOTIFY_TOKEN = ""
-
+global background_color
+global border_color
+global current_song_id
 FALLBACK_THEME = "spotify.html.j2"
 
 REFRESH_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -175,7 +177,7 @@ async def check_spotify():
         # Check if the song ID has changed
         if data["item"]["id"] != current_song_id:
             current_song_id = data["item"]["id"]
-            print("Song changed:", data["item"]["name"])
+            catch_all()
 
         # Make a variable "time" that is set to the amount left in the song
         time = data["item"]["duration_ms"] - data["progress_ms"]
@@ -183,12 +185,8 @@ async def check_spotify():
         # Wait for "time" seconds before checking again
         await asyncio.sleep(time if "is_playing" in data else 1000)
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-@app.route('/with_parameters')
 async def catch_all(path):
-    background_color = request.args.get('background_color') or "181414"
-    border_color = request.args.get('border_color') or "181414"
+    
 
     try:
         data = get(NOW_PLAYING_URL)
@@ -207,3 +205,21 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
+
+async def main():
+    loop = asyncio.get_event_loop()
+    loop.create_task(check_spotify())
+
+@app.startup()
+
+async def startup():
+    await main()
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+@app.route('/with_parameters')
+def setColors(path):
+    global background_color
+    global border_color
+    background_color = request.args.get('background_color') or "181414"
+    border_color = request.args.get('border_color') or "181414"
