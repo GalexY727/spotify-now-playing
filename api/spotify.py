@@ -205,5 +205,5 @@ async def catch_all(path):
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.create_task(await check_spotify())
+    loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
