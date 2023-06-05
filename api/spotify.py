@@ -40,14 +40,14 @@ def getAuth():
     )
 
 
-async def refreshToken():
+def refreshToken():
     data = {
         "grant_type": "refresh_token",
         "refresh_token": SPOTIFY_REFRESH_TOKEN,
     }
 
     headers = {"Authorization": "Basic {}".format(getAuth())}
-    response = await requests.post(
+    response = requests.post(
         REFRESH_TOKEN_URL, data=data, headers=headers).json()
 
     try:
@@ -58,7 +58,7 @@ async def refreshToken():
         raise KeyError(str(response))
 
 
-async def get(url):
+def get(url):
     global SPOTIFY_TOKEN
 
     if (SPOTIFY_TOKEN == ""):
@@ -68,7 +68,7 @@ async def get(url):
         url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"})
 
     if response.status_code == 401:
-        SPOTIFY_TOKEN = await refreshToken()
+        SPOTIFY_TOKEN = refreshToken()
         response = requests.get(
             url, headers={"Authorization": f"Bearer {SPOTIFY_TOKEN}"}).json()
         return response
@@ -125,8 +125,7 @@ async def makeSVG(data, background_color, border_color):
     if not "is_playing" in data:
         contentBar = "" #Shows/Hides the EQ bar if no song is currently playing
         currentStatus = "Recently Played Song:"
-        recentPlays = await get(RECENTLY_PLAYING_URL)
-        vercel.console.log("RecentPlays type: " + type(recentPlays) + "\nRecnetPlays: " + recentPlays + "\n\n")
+        recentPlays = get(RECENTLY_PLAYING_URL)
         recentPlaysLength = len(recentPlays["items"])
         itemIndex = random.randint(0, recentPlaysLength - 1)
         item = recentPlays["items"][itemIndex]["track"]
@@ -170,9 +169,9 @@ async def check_spotify():
 
     while True:
         try:
-            data = await get(NOW_PLAYING_URL)
+            data = get(NOW_PLAYING_URL)
         except Exception:
-            data = await get(RECENTLY_PLAYING_URL)
+            data = get(RECENTLY_PLAYING_URL)
 
         # Check if the song ID has changed
         if data["item"]["id"] != current_song_id:
@@ -193,9 +192,9 @@ async def catch_all(path):
     border_color = request.args.get('border_color') or "181414"
 
     try:
-        data = await get(NOW_PLAYING_URL)
+        data = get(NOW_PLAYING_URL)
     except Exception:
-        data = await get(RECENTLY_PLAYING_URL)
+        data = get(RECENTLY_PLAYING_URL)
 
     svg = await makeSVG(data, background_color, border_color)
 
