@@ -187,28 +187,27 @@ async def check_spotify():
 @app.route("/<path:path>")
 @app.route('/with_parameters')
 async def catch_all(path):
-    
     background_color = request.args.get('background_color') or "181414"
     border_color = request.args.get('border_color') or "181414"
 
-    @stream_with_context
-    async def agen():
-        
-        try:
-            data = await get(NOW_PLAYING_URL)
-        except Exception:
-            data = await get(RECENTLY_PLAYING_URL)
+    try:
+        data = await get(NOW_PLAYING_URL)
+    except Exception:
+        data = await get(RECENTLY_PLAYING_URL)
 
-        svg = await makeSVG(data, background_color, border_color)
+    svg = await makeSVG(data, background_color, border_color)
 
-        resp = Response(svg, mimetype="image/svg+xml")
-        resp.headers["Cache-Control"] = "s-maxage=1"
+    resp = Response(svg, mimetype="image/svg+xml")
+    resp.headers["Cache-Control"] = "s-maxage=1"
 
-        yield resp
-
-    return agen()
+    return resp
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
+
+
+@app.after_serving
+async def restart():
+    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
