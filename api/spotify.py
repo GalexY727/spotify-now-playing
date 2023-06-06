@@ -167,7 +167,7 @@ async def check_spotify():
     global current_song_id
 
     while True:
-        requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
+        requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8", params={"id": current_song_id})
         try:
             data = await get(NOW_PLAYING_URL)
         except Exception:
@@ -209,8 +209,14 @@ if __name__ == "__main__":
 
 
 @app.before_serving
-@app.while_serving
-@app.before_first_request
 async def setup():
-    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
+    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8", {"data": "before_serve"})
     app.add_background_task(check_spotify)
+
+@app.before_first_request
+async def gah():
+    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8", {"data": "before_first"})
+
+@app.while_serving
+async def sfjkah():
+    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8", {"data": "while_serving"})
