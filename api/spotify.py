@@ -167,6 +167,7 @@ async def check_spotify():
     global current_song_id
 
     while True:
+        requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
         try:
             data = await get(NOW_PLAYING_URL)
         except Exception:
@@ -175,13 +176,12 @@ async def check_spotify():
         # Check if the song ID has changed
         if data["item"]["id"] != current_song_id:
             current_song_id = data["item"]["id"]
-            print("Song changed:", data["item"]["name"])
-
+            
         # Make a variable "time" that is set to the amount left in the song
         time = data["item"]["duration_ms"] - data["progress_ms"]
         time = time / 1000
         # Wait for "time" seconds before checking again
-        await asyncio.sleep(time if "is_playing" in data else 1000)
+        await asyncio.sleep(1) # time if "is_playing" in data else 1000)
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
@@ -208,6 +208,6 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
 
 
-@app.after_serving
-async def restart():
-    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
+@app.before_serving
+async def setup():
+    app.add_background_task(check_spotify)
