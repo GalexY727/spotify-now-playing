@@ -201,7 +201,7 @@ async def catch_all(path):
         # According to docs, "svg" should be in bytes.
         yield svg
     
-    resp = Response(await agen(), mimetype="image/svg+xml")
+    resp = await Response(agen(), mimetype="image/svg+xml")
     resp.headers["Cache-Control"] = "s-maxage=1"
     
     return resp
