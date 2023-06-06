@@ -167,7 +167,7 @@ async def check_spotify():
     global current_song_id
 
     while True:
-        requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8", {"song": current_song_id})
+        requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
         try:
             data = await get(NOW_PLAYING_URL)
         except Exception:
