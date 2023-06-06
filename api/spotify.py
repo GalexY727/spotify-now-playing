@@ -189,17 +189,21 @@ async def check_spotify():
 async def catch_all(path):
     background_color = request.args.get('background_color') or "181414"
     border_color = request.args.get('border_color') or "181414"
+    
+    @stream_with_context
+    async def agen():
+        try:
+            data = await get(NOW_PLAYING_URL)
+        except Exception:
+            data = await get(RECENTLY_PLAYING_URL)
 
-    try:
-        data = await get(NOW_PLAYING_URL)
-    except Exception:
-        data = await get(RECENTLY_PLAYING_URL)
-
-    svg = await makeSVG(data, background_color, border_color)
-
-    resp = Response(svg, mimetype="image/svg+xml")
+        svg = await makeSVG(data, background_color, border_color)
+        # According to docs, "svg" should be in bytes.
+        yield svg
+    
+    resp = Response(await agen(), mimetype="image/svg+xml")
     resp.headers["Cache-Control"] = "s-maxage=1"
-
+    
     return resp
 
 if __name__ == "__main__":
