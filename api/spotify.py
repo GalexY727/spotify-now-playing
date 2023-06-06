@@ -8,7 +8,7 @@ import asyncio
 from colorthief import ColorThief
 from base64 import b64encode
 from dotenv import load_dotenv, find_dotenv
-from quart import Quart, Response, render_template, request
+from quart import Quart, Response, render_template, request, stream_with_context
 
 load_dotenv(find_dotenv())
 
@@ -21,9 +21,7 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_SECRET_ID = os.getenv("SPOTIFY_SECRET_ID")
 SPOTIFY_REFRESH_TOKEN = os.getenv("SPOTIFY_REFRESH_TOKEN")
 SPOTIFY_TOKEN = ""
-global background_color
-global border_color
-global current_song_id
+
 FALLBACK_THEME = "spotify.html.j2"
 
 REFRESH_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -59,7 +57,7 @@ def refreshToken():
         raise KeyError(str(response))
 
 
-def get(url):
+async def get(url):
     global SPOTIFY_TOKEN
 
     if (SPOTIFY_TOKEN == ""):
@@ -126,7 +124,7 @@ async def makeSVG(data, background_color, border_color):
     if not "is_playing" in data:
         contentBar = "" #Shows/Hides the EQ bar if no song is currently playing
         currentStatus = "Recently Played Song:"
-        recentPlays = get(RECENTLY_PLAYING_URL)
+        recentPlays = await get(RECENTLY_PLAYING_URL)
         recentPlaysLength = len(recentPlays["items"])
         itemIndex = random.randint(0, recentPlaysLength - 1)
         item = recentPlays["items"][itemIndex]["track"]
@@ -163,21 +161,21 @@ async def makeSVG(data, background_color, border_color):
         "songPalette": songPalette
     }
     
-    await render_template(getTemplate(), **dataDict)
+    return await render_template(getTemplate(), **dataDict)
 
 async def check_spotify():
     global current_song_id
 
     while True:
         try:
-            data = get(NOW_PLAYING_URL)
+            data = await get(NOW_PLAYING_URL)
         except Exception:
-            data = get(RECENTLY_PLAYING_URL)
+            data = await get(RECENTLY_PLAYING_URL)
 
         # Check if the song ID has changed
         if data["item"]["id"] != current_song_id:
             current_song_id = data["item"]["id"]
-            catch_all()
+            print("Song changed:", data["item"]["name"])
 
         # Make a variable "time" that is set to the amount left in the song
         time = data["item"]["duration_ms"] - data["progress_ms"]
@@ -185,42 +183,32 @@ async def check_spotify():
         # Wait for "time" seconds before checking again
         await asyncio.sleep(time if "is_playing" in data else 1000)
 
-async def catch_all():
-    global background_color
-    global border_color
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+@app.route('/with_parameters')
+async def catch_all(path):
+    
+    background_color = request.args.get('background_color') or "181414"
+    border_color = request.args.get('border_color') or "181414"
 
-    try:
-        data = get(NOW_PLAYING_URL)
-    except Exception:
-        data = get(RECENTLY_PLAYING_URL)
+    @stream_with_context
+    async def agen():
+        
+        try:
+            data = await get(NOW_PLAYING_URL)
+        except Exception:
+            data = await get(RECENTLY_PLAYING_URL)
 
-    svg = await makeSVG(data, background_color, border_color)
+        svg = await makeSVG(data, background_color, border_color)
 
-    resp = Response(svg, mimetype="image/svg+xml")
-    resp.headers["Cache-Control"] = "s-maxage=1"
+        resp = Response(svg, mimetype="image/svg+xml")
+        resp.headers["Cache-Control"] = "s-maxage=1"
 
-    return resp
+        yield resp
 
+    return agen()
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(check_spotify())
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
-
-async def main():
-    loop = asyncio.get_event_loop()
-    loop.create_task(check_spotify())
-
-@app.startup()
-
-async def startup():
-    await main()
-
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-@app.route('/with_parameters')
-def setColors(path):
-    global background_color
-    global border_color
-    background_color = request.args.get('background_color') or "181414"
-    border_color = request.args.get('border_color') or "181414"
