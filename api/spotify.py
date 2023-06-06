@@ -201,9 +201,9 @@ async def catch_all(path):
         yield svg
     
     resp = Response(agen(), mimetype="image/svg+xml")
-    resp.headers["Cache-Control"] = "s-maxage=1"
+    #resp.headers["Cache-Control"] = "s-maxage=1"
     
-    return resp
+    return Response(agen(), mimetype="image/svg+xml")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
