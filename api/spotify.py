@@ -180,6 +180,15 @@ async def update():
     
     return await makeSVG(data, background_color, border_color)
 
+@app.route("/time")
+async def getRemainingTime():
+    try:
+        data = await get(NOW_PLAYING_URL)
+    except Exception:
+        data = await get(RECENTLY_PLAYING_URL)
+
+    return str(data["item"]["duration_ms"] - data["progress_ms"])
+
 async def check_spotify():
     global current_song_id
     current_song_id = -1
