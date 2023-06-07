@@ -30,6 +30,11 @@ RECENTLY_PLAYING_URL = (
     "https://api.spotify.com/v1/me/player/recently-played?limit=10"
 )
 
+global background_color
+background_color = "#1DB954"
+global border_color
+border_color = "#191414"
+
 app = Quart(__name__)
 
 
@@ -163,6 +168,18 @@ async def makeSVG(data, background_color, border_color):
     
     return await render_template(getTemplate(), **dataDict)
 
+@app.route("/update")
+async def update():
+    global background_color
+    global border_color
+
+    try:
+            data = await get(NOW_PLAYING_URL)
+    except Exception:
+        data = await get(RECENTLY_PLAYING_URL)
+    
+    return await makeSVG(data, background_color, border_color)
+
 async def check_spotify():
     global current_song_id
     current_song_id = -1
@@ -187,30 +204,22 @@ async def check_spotify():
 @app.route("/<path:path>")
 @app.route('/with_parameters')
 async def catch_all(path):
+    global background_color
+    global border_color
+
     background_color = request.args.get('background_color') or "181414"
     border_color = request.args.get('border_color') or "181414"
-    
-    @stream_with_context
-    async def agen():
 
-        while True:
-            try:
-                data = await get(NOW_PLAYING_URL)
-            except Exception:
-                data = await get(RECENTLY_PLAYING_URL)
+    try:
+        data = await get(NOW_PLAYING_URL)
+    except Exception:
+        data = await get(RECENTLY_PLAYING_URL)
 
-            svg = await makeSVG(data, background_color, border_color)
-            time = data["item"]["duration_ms"] - data["progress_ms"]
-            time = (time / 1000) + 1
-            # Wait for "time" seconds before checking again
-            # According to docs, "svg" should be in bytes... but it's not
-            yield svg
-            await asyncio.sleep(time if "is_playing" in data else 1000)
+    svg = await makeSVG(data, background_color, border_color)
+    resp = Response(agen(), mimetype="image/svg+xml")
+    resp.headers["Cache-Control"] = "s-maxage=1"
     
-    # resp = Response(agen(), mimetype="image/svg+xml")
-    #resp.headers["Cache-Control"] = "s-maxage=1"
-    
-    return Response(agen(), mimetype="image/svg+xml"), 200, {"Cache-Control": "s-maxage=1"}
+    return resp
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
