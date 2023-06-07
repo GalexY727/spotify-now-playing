@@ -1,3 +1,32 @@
+<script type = "text/javascript">
+    window.onload = function() {
+        let time = 100000;
+        const svg = document.getElementById("svg")
+        setInterval((event) => {
+            event.preventDefault();
+            fetch("/update", {
+                method: "GET"
+            })
+            .then(response => 
+                response.text();
+            )
+            .then(html =>  {
+                svg.innerHTML = html;
+                fetch("/time", {
+                    method: "GET"
+                })
+                .then(response => 
+                    response.text();
+                )
+                .then(time => {
+                    this.time = time;
+                    console.log("Time left in song: " + time + " seconds, this.time = " + this.time)
+                })
+            })
+            
+        }, time)
+    }
+</script>
 <svg width="480" height="173" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <!-- previously 133 -->
     <foreignObject width="480" height="173"> <!-- previously 133 -->
         <div xmlns="http://www.w3.org/1999/xhtml" class="container">
