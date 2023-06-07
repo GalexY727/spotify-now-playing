@@ -165,6 +165,7 @@ async def makeSVG(data, background_color, border_color):
 
 async def check_spotify():
     global current_song_id
+    current_song_id = -1
 
     while True:
         try:
@@ -180,7 +181,7 @@ async def check_spotify():
         time = data["item"]["duration_ms"] - data["progress_ms"]
         time = time / 1000
         # Wait for "time" seconds before checking again
-        await asyncio.sleep(1) # time if "is_playing" in data else 1000)
+        await asyncio.sleep(time if "is_playing" in data else 1000)
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
@@ -191,26 +192,32 @@ async def catch_all(path):
     
     @stream_with_context
     async def agen():
-        try:
-            data = await get(NOW_PLAYING_URL)
-        except Exception:
-            data = await get(RECENTLY_PLAYING_URL)
 
-        svg = await makeSVG(data, background_color, border_color)
-        # According to docs, "svg" should be in bytes.
-        yield svg
+        while True:
+            try:
+                data = await get(NOW_PLAYING_URL)
+            except Exception:
+                data = await get(RECENTLY_PLAYING_URL)
+
+            svg = await makeSVG(data, background_color, border_color)
+            time = data["item"]["duration_ms"] - data["progress_ms"]
+            time = (time / 1000) + 1
+            # Wait for "time" seconds before checking again
+            # According to docs, "svg" should be in bytes... but it's not
+            yield svg
+            await asyncio.sleep(time if "is_playing" in data else 1000)
     
-    resp = Response(agen(), mimetype="image/svg+xml")
+    # resp = Response(agen(), mimetype="image/svg+xml")
     #resp.headers["Cache-Control"] = "s-maxage=1"
     
-    return Response(agen(), mimetype="image/svg+xml")
+    return Response(agen(), mimetype="image/svg+xml"), 200, {"Cache-Control": "s-maxage=1"}
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.create_task(check_spotify())
+    loop.create_task(check_spotify)
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
 
 
-@app.before_first_request
-async def setup():
-    app.add_background_task(check_spotify)
+# @app.before_first_request
+# async def setup():
+    #app.add_background_task(check_spotify)
