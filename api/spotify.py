@@ -225,7 +225,7 @@ async def catch_all(path):
         data = await get(RECENTLY_PLAYING_URL)
 
     svg = await makeSVG(data, background_color, border_color)
-    resp = Response(agen(), mimetype="image/svg+xml")
+    resp = Response(svg, mimetype="image/svg+xml")
     resp.headers["Cache-Control"] = "s-maxage=1"
     
     return resp
