@@ -34,6 +34,8 @@ global background_color
 background_color = "#1DB954"
 global border_color
 border_color = "#191414"
+global current_song_id
+current_song_id = ""
 
 app = Quart(__name__)
 
@@ -172,12 +174,17 @@ async def makeSVG(data, background_color, border_color):
 async def update():
     global background_color
     global border_color
+    global current_song_id
 
     try:
         data = await get(NOW_PLAYING_URL)
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
     
+    if (data["item"]["id"] == current_song_id):
+        return Response("No new song", mimetype="text/html")
+    
+    current_song_id = data["item"]["id"]
     svg = await makeSVG(data, background_color, border_color)
 
     return Response(svg, mimetype="text/html")
@@ -220,6 +227,7 @@ async def check_spotify():
 async def catch_all(path):
     global background_color
     global border_color
+    global current_song_id
 
     background_color = request.args.get('background_color') or "181414"
     border_color = request.args.get('border_color') or "181414"
@@ -228,8 +236,11 @@ async def catch_all(path):
         data = await get(NOW_PLAYING_URL)
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
-
+    
+    current_song_id = data["item"]["id"]
+    
     svg = await makeSVG(data, background_color, border_color)
+    
     resp = Response(svg, mimetype="text/html")
     resp.headers["Cache-Control"] = "s-maxage=1"
     
