@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head>
-<script type="text/javascript" src="autoReload.js">
-</script>
-</head>
+{% block javascript %}
+    <script type="text/javascript">
+        {% include "autoReload.js" %}
+    </script>
+{% endblock %}
 <body>
 <svg id="svg" width="480" height="173" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <!-- previously 133 -->
     <foreignObject width="480" height="173"> <!-- previously 133 -->

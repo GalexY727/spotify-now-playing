@@ -225,14 +225,12 @@ async def catch_all(path):
         data = await get(RECENTLY_PLAYING_URL)
 
     svg = await makeSVG(data, background_color, border_color)
-    resp = Response(svg, mimetype="image/svg+xml")
+    resp = Response(svg, mimetype="text/html")
     resp.headers["Cache-Control"] = "s-maxage=1"
     
     return resp
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(check_spotify)
     app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
 
 
