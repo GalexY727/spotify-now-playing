@@ -168,7 +168,7 @@ async def makeSVG(data, background_color, border_color):
     
     return await render_template(getTemplate(), **dataDict)
 
-@app.route("/api/spotify/update")
+@app.route("/update")
 async def update():
     global background_color
     global border_color
@@ -180,7 +180,7 @@ async def update():
     
     return await makeSVG(data, background_color, border_color)
 
-@app.route("/api/spotify/time")
+@app.route("/time")
 async def getRemainingTime():
     try:
         data = await get(NOW_PLAYING_URL)
@@ -188,9 +188,9 @@ async def getRemainingTime():
         data = await get(RECENTLY_PLAYING_URL)
 
     if not "is_playing" in data:
-        return "300000"
+        return "300000" # 5 minutes in ms
 
-    return str(data["item"]["duration_ms"] - data["progress_ms"])
+    return str(data["item"]["duration_ms"] - data["progress_ms"]) # Returns the amount of time left in the song in ms
 
 async def check_spotify():
     global current_song_id
