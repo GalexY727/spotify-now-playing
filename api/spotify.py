@@ -178,7 +178,9 @@ async def update():
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
     
-    return await makeSVG(data, background_color, border_color)
+    svg = await makeSVG(data, background_color, border_color)
+
+    return Response(svg, mimetype="text/html")
 
 @app.route("/time")
 async def getRemainingTime():
@@ -188,9 +190,9 @@ async def getRemainingTime():
         data = await get(RECENTLY_PLAYING_URL)
 
     if not "is_playing" in data:
-        return "300000" # 5 minutes in ms
+        return Response("300000") # 5 minutes in ms
 
-    return str(data["item"]["duration_ms"] - data["progress_ms"]) # Returns the amount of time left in the song in ms
+    return Response(str(data["item"]["duration_ms"] - data["progress_ms"])) # Returns the amount of time left in the song in ms
 
 async def check_spotify():
     global current_song_id
