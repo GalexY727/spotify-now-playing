@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/spotify" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/spotify" }],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://github.com/galexy727/spotify-now-playing"
+    }
+  ]
 }
