@@ -192,7 +192,7 @@ async def getRemainingTime():
     if not "is_playing" in data:
         return Response("300000") # 5 minutes in ms
 
-    return Response(str(data["item"]["duration_ms"] - data["progress_ms"])) # Returns the amount of time left in the song in ms
+    return Response(str(data["item"]["duration_ms"] - data["progress_ms"]), mimetype="text/html") # Returns the amount of time left in the song in ms
 
 async def check_spotify():
     global current_song_id
