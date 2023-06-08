@@ -3,7 +3,7 @@ window.onload = function() {
 };
 
 function eventLoop(svg) {
-    fetch("/api/spotify/update", {
+    fetch("/api/update", {
         method: "GET"
     })
     .then(response => response.text())

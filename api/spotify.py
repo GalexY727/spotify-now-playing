@@ -170,7 +170,7 @@ async def makeSVG(data, background_color, border_color):
     
     return await render_template(getTemplate(), **dataDict)
 
-@app.route("/api/spotify/update")
+@app.route("/api/update")
 async def update():
     global background_color
     global border_color
@@ -189,7 +189,7 @@ async def update():
 
     return Response(svg, mimetype="text/html")
 
-@app.route("/api/spotify/time")
+@app.route("/api/time")
 async def getRemainingTime():
     try:
         data = await get(NOW_PLAYING_URL)
