@@ -16,6 +16,10 @@ function eventLoop(svg) {
         .then(time => {
             time = parseInt(time) + 1000;
             console.log("Time left in song: " + time/1000 + " seconds");
+            // if time is NaN set it to 600000
+            if (isNaN(time)) {
+                time = 600000;
+            }
             setTimeout(eventLoop, time, svg);
         });
     });
