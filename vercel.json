@@ -2,7 +2,7 @@
   "rewrites": [{ "source": "/(.*)", "destination": "/api/spotify" }],
   "redirects": [
     {
-      "source": "^/$",
+      "source": "/api/spotify",
       "destination": "https://github.com/galexy727/spotify-now-playing"
     }
   ]
