@@ -174,7 +174,7 @@ async def update():
     global border_color
 
     try:
-            data = await get(NOW_PLAYING_URL)
+        data = await get(NOW_PLAYING_URL)
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
     
@@ -186,6 +186,9 @@ async def getRemainingTime():
         data = await get(NOW_PLAYING_URL)
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
+
+    if not "is_playing" in data:
+        return str(300000)
 
     return str(data["item"]["duration_ms"] - data["progress_ms"])
 
