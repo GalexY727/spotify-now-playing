@@ -124,6 +124,7 @@ async def loadImageB64(url):
 
 
 async def makeSVG(data, background_color, border_color):
+    global current_song_id
     barCount = 84
     contentBar = "".join(["<div class='bar'></div>" for _ in range(barCount)])
     barCSS = barGen(barCount)
@@ -137,6 +138,7 @@ async def makeSVG(data, background_color, border_color):
         item = recentPlays["items"][itemIndex]["track"]
     else:
         item = data["item"]
+        current_song_id = data["item"]["id"]
         currentStatus = "Currently Vibing to:"
 
     if item["album"]["images"] == []:
@@ -181,10 +183,9 @@ async def update():
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
     
-    if (data["item"]["id"] == current_song_id) or not "is_playing" in data:
+    if not "is_playing" in data or (data["item"]["id"] == current_song_id):
         return Response("No new song", mimetype="text/html")
     
-    current_song_id = data["item"]["id"]
     svg = await makeSVG(data, background_color, border_color)
 
     return Response(svg, mimetype="text/html")
@@ -195,7 +196,6 @@ async def update():
 async def catch_all(path):
     global background_color
     global border_color
-    global current_song_id
 
     background_color = request.args.get('background_color') or "181414"
     border_color = request.args.get('border_color') or "181414"
@@ -204,9 +204,7 @@ async def catch_all(path):
         data = await get(NOW_PLAYING_URL)
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
-    
-    current_song_id = data["item"]["id"]
-    
+        
     svg = await makeSVG(data, background_color, border_color)
     
     resp = Response(svg, mimetype="text/html")
