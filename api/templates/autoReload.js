@@ -3,13 +3,13 @@ window.onload = function() {
 };
 
 function eventLoop(svg) {
-    fetch("/update", {
+    fetch("/api/spotify/update", {
         method: "GET"
     })
     .then(response => response.text())
     .then(html =>  {
         svg.innerHTML = html;
-        fetch("/time", {
+        fetch("/api/spotify/time", {
             method: "GET"
         })
         .then(response => response.text())
