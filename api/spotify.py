@@ -181,45 +181,13 @@ async def update():
     except Exception:
         data = await get(RECENTLY_PLAYING_URL)
     
-    if (data["item"]["id"] == current_song_id):
+    if (data["item"]["id"] == current_song_id) or not "is_playing" in data:
         return Response("No new song", mimetype="text/html")
     
     current_song_id = data["item"]["id"]
     svg = await makeSVG(data, background_color, border_color)
 
     return Response(svg, mimetype="text/html")
-
-@app.route("/api/time")
-async def getRemainingTime():
-    try:
-        data = await get(NOW_PLAYING_URL)
-    except Exception:
-        data = await get(RECENTLY_PLAYING_URL)
-
-    if not "is_playing" in data:
-        return Response("300000") # 5 minutes in ms
-
-    return Response(str(data["item"]["duration_ms"] - data["progress_ms"]), mimetype="text/html") # Returns the amount of time left in the song in ms
-
-async def check_spotify():
-    global current_song_id
-    current_song_id = -1
-
-    while True:
-        try:
-            data = await get(NOW_PLAYING_URL)
-        except Exception:
-            data = await get(RECENTLY_PLAYING_URL)
-
-        # Check if the song ID has changed
-        if data["item"]["id"] != current_song_id:
-            current_song_id = data["item"]["id"]
-            
-        # Make a variable "time" that is set to the amount left in the song
-        time = data["item"]["duration_ms"] - data["progress_ms"]
-        time = time / 1000
-        # Wait for "time" seconds before checking again
-        await asyncio.sleep(time if "is_playing" in data else 1000)
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
